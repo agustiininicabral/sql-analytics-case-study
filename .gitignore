@@ -1,0 +1,3 @@
+data/*.db
+outputs/
+.DS_Store
