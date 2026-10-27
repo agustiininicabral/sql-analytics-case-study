@@ -1,30 +1,74 @@
-import os, sqlite3, glob
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+
 import pandas as pd
 
-DB = "data/case.db"
-os.makedirs("outputs", exist_ok=True)
 
-files = sorted(glob.glob("sql/queries/q*.sql"))
-results = {}
+DB = Path("data/case.db")
+QUERY_DIR = Path("sql/queries")
+OUTPUT_DIR = Path("outputs")
 
-with sqlite3.connect(DB) as con:
-    for f in files:
-        sql = open(f, "r", encoding="utf-8").read()
-        df = pd.read_sql_query(sql, con)
-        results[os.path.basename(f).replace(".sql","")] = df
 
-xlsx_path = "outputs/query_results.xlsx"
-with pd.ExcelWriter(xlsx_path, engine="openpyxl") as writer:
-    for name, df in results.items():
-        sheet = name[:31]
-        df.to_excel(writer, sheet_name=sheet, index=False)
+def run_queries(
+    db_path: Path = DB,
+    query_dir: Path = QUERY_DIR,
+    output_dir: Path = OUTPUT_DIR,
+) -> dict[str, pd.DataFrame]:
+    if not db_path.is_file():
+        raise FileNotFoundError(
+            f"Database not found: {db_path}. Run scripts/build_sqlite_db.py first."
+        )
 
-# create a small md summary
-md = ["# Query Results", "", f"- Total queries: **{len(results)}**", "", f"- Output Excel: `{xlsx_path}`", ""]
-for name, df in list(results.items())[:8]:
-    md.append(f"## {name}")
-    md.append(df.head(10).to_markdown(index=False))
-    md.append("")
-open("outputs/README_results.md","w",encoding="utf-8").write("\n".join(md))
+    query_files = sorted(query_dir.glob("q*.sql"))
+    if not query_files:
+        raise FileNotFoundError(f"No SQL query files found in {query_dir}.")
 
-print("OK - Wrote", xlsx_path)
+    results: dict[str, pd.DataFrame] = {}
+    with sqlite3.connect(db_path) as connection:
+        for query_path in query_files:
+            sql = query_path.read_text(encoding="utf-8")
+            results[query_path.stem] = pd.read_sql_query(sql, connection)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    workbook_path = output_dir / "query_results.xlsx"
+    with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
+        for name, dataframe in results.items():
+            dataframe.to_excel(
+                writer,
+                sheet_name=name[:31],
+                index=False,
+            )
+
+    markdown = [
+        "# Query Results",
+        "",
+        f"- Total queries: **{len(results)}**",
+        "",
+        f"- Output Excel: `{workbook_path}`",
+        "",
+    ]
+    for name, dataframe in list(results.items())[:8]:
+        markdown.extend(
+            [
+                f"## {name}",
+                dataframe.head(10).to_markdown(index=False),
+                "",
+            ]
+        )
+
+    (output_dir / "README_results.md").write_text(
+        "\n".join(markdown),
+        encoding="utf-8",
+    )
+    print(f"OK - Executed {len(results)} queries and wrote {workbook_path}")
+    return results
+
+
+def main() -> None:
+    run_queries()
+
+
+if __name__ == "__main__":
+    main()
