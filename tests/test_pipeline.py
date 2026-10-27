@@ -70,7 +70,7 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
     assert "Total queries: **20**" in summary
 
     with pd.ExcelFile(workbook_path) as workbook:
-        quartiles = pd.read_excel(workbook, sheet_name="q17_percentile_order_value")
+        quartiles = pd.read_excel(workbook, sheet_name="q17_order_value_quartiles")
         assert quartiles["quartile"].tolist() == [1, 2, 3, 4]
         assert int(quartiles["orders"].sum()) == 4200
         assert (quartiles["min_value"] <= quartiles["max_value"]).all()
