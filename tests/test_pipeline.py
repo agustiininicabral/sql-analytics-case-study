@@ -34,6 +34,18 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
         assert (
             connection.execute("SELECT COUNT(*) FROM order_items").fetchone()[0] > 4200
         )
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        assert (
+            connection.execute(
+                """
+                SELECT COUNT(*) FROM (
+                    SELECT order_id, product_id FROM order_items
+                    GROUP BY order_id, product_id HAVING COUNT(*) > 1
+                )
+                """
+            ).fetchone()[0]
+            == 0
+        )
 
     run = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "run_queries.py")],
@@ -50,13 +62,14 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
     with pd.ExcelFile(workbook_path) as workbook:
         assert len(workbook.sheet_names) == 20
         assert "q01_total_revenue_margin" in workbook.sheet_names
+        assert "q10_product_pairing" in workbook.sheet_names
         assert "q20_funnel_proxy" in workbook.sheet_names
 
     summary = (tmp_path / "outputs" / "README_results.md").read_text(encoding="utf-8")
     assert "Total queries: **20**" in summary
 
     with pd.ExcelFile(workbook_path) as workbook:
-        quartiles = pd.read_excel(workbook, sheet_name="q17_percentile_order_value")
+        quartiles = pd.read_excel(workbook, sheet_name="q17_order_value_quartiles")
         assert quartiles["quartile"].tolist() == [1, 2, 3, 4]
         assert int(quartiles["orders"].sum()) == 4200
         assert (quartiles["min_value"] <= quartiles["max_value"]).all()

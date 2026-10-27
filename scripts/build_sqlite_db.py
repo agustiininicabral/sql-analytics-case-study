@@ -83,6 +83,7 @@ def build_database(db_path: Path = DB, schema_path: Path = SCHEMA_PATH) -> None:
     )
 
     with sqlite3.connect(db_path) as connection:
+        connection.execute("PRAGMA foreign_keys = ON")
         connection.executescript(schema)
         customers.to_sql("customers", connection, if_exists="append", index=False)
         products.to_sql("products", connection, if_exists="append", index=False)
