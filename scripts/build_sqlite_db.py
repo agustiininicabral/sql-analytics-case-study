@@ -63,9 +63,7 @@ def build_database(db_path: Path = DB, schema_path: Path = SCHEMA_PATH) -> None:
             ["web", "store", "marketplace"],
             weights=[0.45, 0.40, 0.15],
         )[0]
-        orders.append(
-            [order_id, customer_id, order_date.strftime("%Y-%m-%d"), channel]
-        )
+        orders.append([order_id, customer_id, order_date.strftime("%Y-%m-%d"), channel])
 
         for product_id in random.sample(range(1, 41), random.randint(1, 4)):
             quantity = random.randint(1, 5)
@@ -92,7 +90,7 @@ def build_database(db_path: Path = DB, schema_path: Path = SCHEMA_PATH) -> None:
         items_df.to_sql("order_items", connection, if_exists="append", index=False)
 
     print(f"OK - Built SQLite DB at {db_path}")
-    
+
 
 def main() -> None:
     build_database()
