@@ -29,7 +29,10 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
         assert connection.execute("SELECT COUNT(*) FROM customers").fetchone()[0] == 400
         assert connection.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 40
         assert connection.execute("SELECT COUNT(*) FROM orders").fetchone()[0] == 4200
-        assert connection.execute("SELECT COUNT(*) FROM order_items").fetchone()[0] > 4200
+        assert (
+            connection.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
+            > 4200
+        )
 
     run = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "run_queries.py")],
