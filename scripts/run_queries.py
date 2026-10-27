@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import argparse
 import sqlite3
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -66,9 +68,35 @@ def run_queries(
     return results
 
 
-def main() -> None:
-    run_queries()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Run the SQL analytics case study queries."
+    )
+    parser.add_argument("--db", type=Path, default=DB, help="SQLite database path.")
+    parser.add_argument(
+        "--query-dir",
+        type=Path,
+        default=QUERY_DIR,
+        help="Directory containing q*.sql files.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="Directory for Excel and Markdown outputs.",
+    )
+    args = parser.parse_args(argv)
+    try:
+        run_queries(
+            db_path=args.db,
+            query_dir=args.query_dir,
+            output_dir=args.output_dir,
+        )
+    except (OSError, ValueError, sqlite3.Error, pd.errors.DatabaseError) as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

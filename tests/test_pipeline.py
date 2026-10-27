@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from scripts.run_queries import main as run_queries_main
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -52,3 +54,72 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
 
     summary = (tmp_path / "outputs" / "README_results.md").read_text(encoding="utf-8")
     assert "Total queries: **20**" in summary
+
+    with pd.ExcelFile(workbook_path) as workbook:
+        quartiles = pd.read_excel(workbook, sheet_name="q17_percentile_order_value")
+        assert quartiles["quartile"].tolist() == [1, 2, 3, 4]
+        assert int(quartiles["orders"].sum()) == 4200
+        assert (quartiles["min_value"] <= quartiles["max_value"]).all()
+
+        retention = pd.read_excel(workbook, sheet_name="q08_cohort_retention")
+        assert retention["month_n"].between(0, 6).all()
+        assert retention["retention_pct"].between(0, 100).all()
+        month_zero = retention.loc[retention["month_n"] == 0]
+        assert (month_zero["retention_pct"] == 100).all()
+
+        funnel = pd.read_excel(workbook, sheet_name="q20_funnel_proxy")
+        row = funnel.iloc[0]
+        assert row["customers_created"] == 400
+        assert (
+            row["customers_repeat"]
+            <= row["customers_ordered"]
+            <= row["customers_created"]
+        )
+        assert 0 <= row["repeat_pct"] <= row["ordered_pct"] <= 100
+
+        revenue = pd.read_excel(workbook, sheet_name="q01_total_revenue_margin").iloc[0]
+        assert revenue["revenue"] > 0
+        assert revenue["cost"] > 0
+        assert revenue["margin"] > 0
+        assert abs(revenue["revenue"] - revenue["cost"] - revenue["margin"]) < 0.02
+
+
+def test_run_queries_cli_returns_two_for_missing_database(
+    tmp_path: Path, capsys
+) -> None:
+    result = run_queries_main(
+        [
+            "--db",
+            str(tmp_path / "missing.db"),
+            "--query-dir",
+            str(ROOT / "sql" / "queries"),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+        ]
+    )
+    assert result == 2
+    assert "Database not found" in capsys.readouterr().err
+
+
+def test_run_queries_cli_returns_two_for_invalid_sql(tmp_path: Path, capsys) -> None:
+    database = tmp_path / "case.db"
+    with sqlite3.connect(database):
+        pass
+    query_dir = tmp_path / "queries"
+    query_dir.mkdir()
+    (query_dir / "q01_broken.sql").write_text(
+        "SELECT * FROM missing_table;", encoding="utf-8"
+    )
+
+    result = run_queries_main(
+        [
+            "--db",
+            str(database),
+            "--query-dir",
+            str(query_dir),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+        ]
+    )
+    assert result == 2
+    assert "ERROR:" in capsys.readouterr().err
