@@ -1,0 +1,52 @@
+name: SQL Analytics Case Study
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Check dependency consistency
+        run: python -m pip check
+
+      - name: Check Python formatting
+        run: ruff format --check scripts tests
+
+      - name: Run Ruff lint checks
+        run: ruff check scripts tests
+
+      - name: Test database generation and SQL queries
+        run: python -m pytest -q
+
+      - name: Build demo dataset and execute all queries
+        run: |
+          python scripts/build_sqlite_db.py
+          python scripts/run_queries.py
+
+      - name: Upload query results
+        if: always() && hashFiles('outputs/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-query-results
+          path: outputs/
+          if-no-files-found: warn
+          retention-days: 7
