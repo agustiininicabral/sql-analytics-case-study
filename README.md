@@ -41,7 +41,7 @@ El dataset usa semillas fijas para que la generación sea reproducible. La base 
 
 ## Consultas incluidas
 
-Las 20 consultas cubren ingresos y margen, evolución mensual, crecimiento MoM, productos y clientes principales, participación por canal, clientes nuevos y recurrentes, cohortes y retención, RFM, attach rate, ticket promedio, distribución de pedidos, mix de categorías, margen por segmento, día de mayor venta, acumulado de ingresos, cuartiles de valor de pedido, LTV simplificado, tasa de recompra y un funnel proxy.
+Las 20 consultas cubren ingresos y margen, evolución mensual, crecimiento MoM, productos y clientes principales, participación por canal, clientes nuevos y recurrentes, cohortes y retención, RFM, co-compra de productos, ticket promedio, distribución de pedidos, mix de categorías, margen por segmento, día de mayor venta, acumulado de ingresos, cuartiles de valor de pedido, LTV simplificado, tasa de recompra y un funnel proxy.
 
 Todas las consultas se ejecutan en SQLite. Los nombres de los archivos siguen el patrón `qXX_nombre.sql`.
 
