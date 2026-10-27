@@ -28,7 +28,7 @@ Primero generá la base SQLite:
 Después ejecutá las consultas:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\run_queries.py
+..venvScriptspython.exe scriptsun_queries.py
 ```
 
 Archivos generados:
@@ -71,3 +71,8 @@ La prueba end-to-end genera la base en un directorio temporal y ejecuta las 20 c
 - `scripts/build_sqlite_db.py`: generador determinista de la base.
 - `scripts/run_queries.py`: ejecutor y exportador de resultados.
 - `tests/test_pipeline.py`: validación end-to-end de generación y consultas.
+
+
+## Query runner options and exit codes
+
+The query runner accepts `--db`, `--query-dir`, and `--output-dir`, so it can run against temporary databases and custom SQL folders without changing source files. It returns `0` on success and `2` for missing databases/query files, invalid SQL, or output errors; errors are printed to stderr. The end-to-end test also checks business invariants for quartile totals, cohort month-zero retention, funnel ordering, and revenue/cost/margin reconciliation.
