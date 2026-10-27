@@ -70,7 +70,11 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
         funnel = pd.read_excel(workbook, sheet_name="q20_funnel_proxy")
         row = funnel.iloc[0]
         assert row["customers_created"] == 400
-        assert row["customers_repeat"] <= row["customers_ordered"] <= row["customers_created"]
+        assert (
+            row["customers_repeat"]
+            <= row["customers_ordered"]
+            <= row["customers_created"]
+        )
         assert 0 <= row["repeat_pct"] <= row["ordered_pct"] <= 100
 
         revenue = pd.read_excel(workbook, sheet_name="q01_total_revenue_margin").iloc[0]
@@ -80,7 +84,9 @@ def test_build_database_and_execute_all_sql_queries(tmp_path: Path) -> None:
         assert abs(revenue["revenue"] - revenue["cost"] - revenue["margin"]) < 0.02
 
 
-def test_run_queries_cli_returns_two_for_missing_database(tmp_path: Path, capsys) -> None:
+def test_run_queries_cli_returns_two_for_missing_database(
+    tmp_path: Path, capsys
+) -> None:
     result = run_queries_main(
         [
             "--db",

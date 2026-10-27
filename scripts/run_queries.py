@@ -69,10 +69,22 @@ def run_queries(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run the SQL analytics case study queries.")
+    parser = argparse.ArgumentParser(
+        description="Run the SQL analytics case study queries."
+    )
     parser.add_argument("--db", type=Path, default=DB, help="SQLite database path.")
-    parser.add_argument("--query-dir", type=Path, default=QUERY_DIR, help="Directory containing q*.sql files.")
-    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR, help="Directory for Excel and Markdown outputs.")
+    parser.add_argument(
+        "--query-dir",
+        type=Path,
+        default=QUERY_DIR,
+        help="Directory containing q*.sql files.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="Directory for Excel and Markdown outputs.",
+    )
     args = parser.parse_args(argv)
     try:
         run_queries(
