@@ -28,7 +28,7 @@ Primero generá la base SQLite:
 Después ejecutá las consultas:
 
 ```powershell
-..venvScriptspython.exe scriptsun_queries.py
+.\.venv\Scripts\python.exe scripts\run_queries.py
 ```
 
 Archivos generados:
